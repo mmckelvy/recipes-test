@@ -1,0 +1,97 @@
+// MIXINS ------------------------------- //
+
+// GRID -------------------------------
+
+/*
+@function: createContainer.
+@description: Creates containers.
+@param: padding is the padding on the right AND left.
+@param: width-* is the pixel width of the parent container.  xs, sm, md, etc. are screen sizes.  Will use the next smallest screen size if an arg is omitted (e.g. if you use just pass '1024px' then all screens will have a 1024px width for the container).
+*/ 
+createContainer(padding = $primary-padding, max-width, width-xs, width-sm = width-xs, width-md = width-sm, width-lg = width-md, width-xl = width-lg)
+	
+	width: width-xs
+	max-width: max-width
+	marginCenter()
+	padding-left: padding
+	padding-right: padding
+
+	@media $screen-sm-min
+		width: width-sm
+
+	@media $screen-md-min
+		width: width-md
+
+	@media $screen-lg-min
+		width: width-lg
+
+	@media $screen-xl-min
+		width: width-xl
+
+/*
+@function: createRow.
+@description: Creates rows.
+@param: margin is the negative margin on the right and left.  Prevents double padding on beginning and ending columns.
+*/
+createRow(margin = $primary-padding)
+	margin-left: margin * -1
+	margin-right: margin * -1
+	clearfix()
+
+/*
+@function: createColumn
+@description: Creates columns.
+@param: padding is the padding on the right AND left.  Thus gutters will be equal to 2x padding.
+@param: pct-* is the percent width of the parent container.  xs, sm, md, etc. are screen sizes.  Will use the next smallest screen size if an arg is omitted (e.g. if you use just pass '30%' then all screens will have a 30% width for the column)
+*/
+
+createColumn(padding = $primary-padding, pct-xs, pct-sm = pct-xs, pct-md = pct-sm, pct-lg = pct-md, pct-xl = pct-lg)
+	width: pct-xs // Widths are percentages of the parent element.
+	padding-left: padding
+	padding-right: padding
+	float: left
+	min-height: 1px
+	position: relative;
+
+	@media $screen-sm-min
+		width: pct-sm
+
+	@media $screen-md-min
+		width: pct-md
+
+	@media $screen-lg-min
+		width: pct-lg
+
+	@media $screen-xl-min
+		width: pct-xl
+
+// POSITIONING -------------------------------
+
+// Apply style to the actual element to be centered.
+verticalCenter()
+	position: relative;
+	top: 50%;
+	-webkit-transform: translateY(-50%);
+	-moz-transform: translateY(-50%);
+	-ms-transform: translateY(-50%);
+	transform: translateY(-50%);
+
+marginCenter()
+	margin-left: auto
+	margin-right: auto
+	
+absoluteHzCenter()
+	left: 50%
+	-webkit-transform: translateX(-50%);
+	-moz-transform: translateX(-50%);
+	-ms-transform: translateX(-50%);
+	transform: translateX(-50%);
+
+clearfix()
+	&:before,
+	&:after 
+		content: "";
+		display: table;
+	
+	&:after 
+		clear: both;

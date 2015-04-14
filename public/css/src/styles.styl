@@ -1,2 +1,10 @@
-.some-style
-	font-size: 10px;
+// Stylesheet aggregator and entry point. -------------------------------
+
+// Base dependencies
+@require 'variables'
+@require 'mixins'
+
+// Core stylesheets
+@require 'base'
+@require 'layout'
+@require 'components'
