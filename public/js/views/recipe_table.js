@@ -7,7 +7,7 @@ var RecipeTable = Marionette.CompositeView.extend({
 
 	className: 'recipe-table',
 	childView: RecipeRow,
-	template: recipeTableTemplate,
+	template: recipeTableTemplate
 
 });
 

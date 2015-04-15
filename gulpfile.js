@@ -23,7 +23,7 @@ gulp.task('start', shell.task([
 // Watch files for changes.
 gulp.task('watch', function() {
 	gulp.watch(['./public/css/src/*.styl'], ['css']);
-	gulp.watch(['./public/js/*.js'], ['scripts:client']);
+	gulp.watch(['./public/js/*.js', './public/templates/*.jade'], ['scripts:client']);
 });
 
 gulp.task('default', ['css', 'scripts:client', 'start', 'watch']);

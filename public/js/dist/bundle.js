@@ -18299,6 +18299,15 @@ var RecipeRow = Marionette.ItemView.extend({
 
 	className: 'recipe-row',
 	template: recipeRowTemplate,
+	
+	serializeData: function () {
+		return {
+			name: this.model.get('name'),
+			type: this.model.get('type'),
+			cookTime: this.model.get('cook_time'),
+			ingredients: this.model.get('ingredients').join(', ')
+		}
+	}
 
 });
 
@@ -18313,7 +18322,7 @@ var RecipeTable = Marionette.CompositeView.extend({
 
 	className: 'recipe-table',
 	childView: RecipeRow,
-	template: recipeTableTemplate,
+	template: recipeTableTemplate
 
 });
 
@@ -18326,8 +18335,8 @@ module.exports = function template(locals) {
 var buf = [];
 var jade_mixins = {};
 var jade_interp;
-
-;return buf.join("");
+;var locals_for_with = (locals || {});(function (cookTime, ingredients, name, type) {
+buf.push("<div class=\"table-row body-row\"><div class=\"table-col-25\">" + (jade.escape((jade_interp = name) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = type) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = cookTime) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = ingredients) == null ? '' : jade_interp)) + "</div></div>");}.call(this,"cookTime" in locals_for_with?locals_for_with.cookTime:typeof cookTime!=="undefined"?cookTime:undefined,"ingredients" in locals_for_with?locals_for_with.ingredients:typeof ingredients!=="undefined"?ingredients:undefined,"name" in locals_for_with?locals_for_with.name:typeof name!=="undefined"?name:undefined,"type" in locals_for_with?locals_for_with.type:typeof type!=="undefined"?type:undefined));;return buf.join("");
 };
 },{"jade/runtime":9}],17:[function(require,module,exports){
 var jade = require("jade/runtime");
@@ -18337,7 +18346,7 @@ var buf = [];
 var jade_mixins = {};
 var jade_interp;
 
-buf.push("<div class=\"table-row\"><div class=\"table-col-25\">Some table data</div></div>");;return buf.join("");
+buf.push("<div class=\"table-row header-row\"><div class=\"table-col-25\">Name</div><div class=\"table-col-25\">Type</div><div class=\"table-col-25\">Cook time</div><div class=\"table-col-25\">Ingredients</div></div>");;return buf.join("");
 };
 },{"jade/runtime":9}],18:[function(require,module,exports){
 module.exports=[

@@ -241,3 +241,8 @@ textarea {
   font-size: 22px;
   font-weight: 200;
 }
+.header-row {
+  font-weight: 700;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #636363;
+}
