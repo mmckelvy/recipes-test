@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "backbone": "^1.1.2",
+    "backbone.localstorage": "^1.1.16",
     "backbone.marionette": "^2.4.1",
     "browserify": "^9.0.8",
     "express": "3.4.8",
