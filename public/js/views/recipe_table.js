@@ -34,8 +34,8 @@ var RecipeTable = Marionette.CompositeView.extend({
 	},
 
 	filterRecipes: function (e) {
-		var selectedIngredient = $(e.currentTarget).val();
-		
+		var selectedIngredient = $(e.currentTarget).val() || arguments[1];
+
 		if (selectedIngredient === 'all') {
 			var filtered = allRecipes;
 		}
@@ -49,6 +49,8 @@ var RecipeTable = Marionette.CompositeView.extend({
 		}
 
 		this.collection.set(filtered);
+		// Update localstorage with selection.
+		localStorage.setItem('ingredient', selectedIngredient);
 
 	},
 

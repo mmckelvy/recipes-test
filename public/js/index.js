@@ -28,23 +28,19 @@ $(function () {
 	var recipeTable = new RecipeTable({collection: App.recipes});
 	var ingredientList = new IngredientList({model: App.uniqIngredients});
 
-	// Retrieve data.
-	// If there is nothing in local storage, then bootstrap the data.
-	App.recipes.fetch({
-		success: function (storedRecipes, response, options) {
-			// If nothing in local storage, then use the bootstrapped data.
-			if (storedRecipes.length === 0) {
-				App.recipes.set(allRecipes);
-			}
+	// Set the collection using data from local storage if available.
+	if (localStorage.getItem('ingredient')) {
+		recipeTable.filterRecipes(false, localStorage.getItem('ingredient'));
+		App.recipeTableRegion.show(recipeTable);
+		App.ingredientListRegion.show(ingredientList);
+		
+	}
 
-			else {
-				App.selectedRecipes.set(storedRecipes);
-			}
-
-			App.recipeTableRegion.show(recipeTable);
-			App.ingredientListRegion.show(ingredientList);
-		}
-	});
+	else {
+		App.recipes.set(allRecipes);
+		App.recipeTableRegion.show(recipeTable);
+		App.ingredientListRegion.show(ingredientList);
+	}
 }); // End Document ready.
 
 

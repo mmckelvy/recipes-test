@@ -30095,23 +30095,19 @@ $(function () {
 	var recipeTable = new RecipeTable({collection: App.recipes});
 	var ingredientList = new IngredientList({model: App.uniqIngredients});
 
-	// Retrieve data.
-	// If there is nothing in local storage, then bootstrap the data.
-	App.recipes.fetch({
-		success: function (storedRecipes, response, options) {
-			// If nothing in local storage, then use the bootstrapped data.
-			if (storedRecipes.length === 0) {
-				App.recipes.set(allRecipes);
-			}
+	// Set the collection using data from local storage if available.
+	if (localStorage.getItem('ingredient')) {
+		recipeTable.filterRecipes(false, localStorage.getItem('ingredient'));
+		App.recipeTableRegion.show(recipeTable);
+		App.ingredientListRegion.show(ingredientList);
+		
+	}
 
-			else {
-				App.selectedRecipes.set(storedRecipes);
-			}
-
-			App.recipeTableRegion.show(recipeTable);
-			App.ingredientListRegion.show(ingredientList);
-		}
-	});
+	else {
+		App.recipes.set(allRecipes);
+		App.recipeTableRegion.show(recipeTable);
+		App.ingredientListRegion.show(ingredientList);
+	}
 }); // End Document ready.
 
 
@@ -30251,6 +30247,7 @@ var RecipeTable = Marionette.CompositeView.extend({
 
 	initialize: function (options) {
 		this.allIngredients = this.getAllIngredients(allRecipes);
+		
 	},
 
 	// Get all unique ingredients.
@@ -30267,8 +30264,8 @@ var RecipeTable = Marionette.CompositeView.extend({
 	},
 
 	filterRecipes: function (e) {
-		var selectedIngredient = $(e.currentTarget).val();
-		
+		var selectedIngredient = $(e.currentTarget).val() || arguments[1];
+
 		if (selectedIngredient === 'all') {
 			var filtered = allRecipes;
 		}
@@ -30282,6 +30279,8 @@ var RecipeTable = Marionette.CompositeView.extend({
 		}
 
 		this.collection.set(filtered);
+		// Update localstorage with selection.
+		localStorage.setItem('ingredient', selectedIngredient);
 
 	},
 
