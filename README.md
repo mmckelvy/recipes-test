@@ -13,5 +13,5 @@ If you want to run the app locally, follow these steps:
 1. Again in the command line type: `gulp`
 1. Go to localhost:3000 in your favorite browser.
 
-## Quick notes on technologies used.
+## Quick notes on technologies used
 I used Backbone, Marionette, and vanilla JS for typical view / model logic.  For templating I used Jade (with Jadeify for client side templating).  Build / module tools included Gulp and Browserify, and for CSS pre-processing I used Stylus.  No CSS frameworks -- the mixins, grid, etc. are my own.
