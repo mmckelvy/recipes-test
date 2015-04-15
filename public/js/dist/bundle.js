@@ -30161,14 +30161,16 @@ var IngredientList = Marionette.ItemView.extend({
 				this.selectedRecipes[recipe.cid] = recipe.get('ingredients');
 			}
 
-			this.setIngredients(this.selectedRecipes);
+			var ingredients = this.getIngredients(this.selectedRecipes);
+			this.model.set({'ingredients': ingredients});
+			
 		});
 
 		this.listenTo(this.model, 'change', this.render, this);
 	},
 
-	// Returns a array of unique ingredients from an array of recipes.
-	setIngredients : function (selectedRecipes) {
+	// Returns an array of unique ingredients from an array of recipes.
+	getIngredients: function (selectedRecipes) {
 		var args = [];
 		for (var key in selectedRecipes) {
 			args.push(selectedRecipes[key])
@@ -30178,8 +30180,7 @@ var IngredientList = Marionette.ItemView.extend({
 		var allIngredients = [].concat.apply([], args);
 		allIngredients.sort();
 
-		var ingredients =  _.uniq(allIngredients, true); // Remove duplicate ingredients.
-		this.model.set({'ingredients': ingredients});
+		return _.uniq(allIngredients, true); // Remove duplicate ingredients.
 	},
 
 	serializeData: function () {
@@ -30208,6 +30209,10 @@ var RecipeRow = Marionette.ItemView.extend({
 		'change .select-item': 'changeRecipe'
 	},
 
+	initialize: function () {
+		this.listenTo(this.model, 'change', this.render(), this);
+	},
+
 	// Trigger a Backbone event; pass along the recipe for the triggering model.
 	changeRecipe: function () {
 		Backbone.trigger('recipe:changed', this.model);
@@ -30226,22 +30231,71 @@ var RecipeRow = Marionette.ItemView.extend({
 
 module.exports = RecipeRow;
 },{"../../templates/recipe_row.jade":21,"backbone":6,"backbone.marionette":2}],19:[function(require,module,exports){
+var $ = require('jquery');
 var Backbone = require('backbone');
 var Marionette = require('backbone.marionette');
+var _ = require('lodash');
 var RecipeRow = require('./recipe_row');
 var recipeTableTemplate = require('../../templates/recipe_table.jade');
+var allRecipes = require('../../../recipes.json');
 
 var RecipeTable = Marionette.CompositeView.extend({
 
 	className: 'recipe-table',
 	childView: RecipeRow,
-	template: recipeTableTemplate
+	template: recipeTableTemplate,
+
+	events: {
+		'change .ingredient-select': 'filterRecipes'
+	},
+
+	initialize: function (options) {
+		this.allIngredients = this.getAllIngredients(allRecipes);
+	},
+
+	// Get all unique ingredients.
+	getAllIngredients: function (recipes) {
+		var args = recipes.map(function (recipe) {
+			return recipe.ingredients;
+		});
+		
+		// Concatenate the arrays.
+		var allIngredients = [].concat.apply([], args);
+		allIngredients.sort();
+
+		return _.uniq(allIngredients, true); // Remove duplicate ingredients.
+	},
+
+	filterRecipes: function (e) {
+		var selectedIngredient = $(e.currentTarget).val();
+		
+		if (selectedIngredient === 'all') {
+			var filtered = allRecipes;
+		}
+
+		else {
+			var filtered = allRecipes.filter(function (recipe) {
+				return recipe.ingredients.some(function (ingredient) {
+					return selectedIngredient === ingredient;
+				});
+			});
+		}
+
+		this.collection.set(filtered);
+
+	},
+
+	serializeData: function () {
+		return {
+			allIngredients: this.allIngredients
+		}
+	}
 
 });
 
 module.exports = RecipeTable;
 
-},{"../../templates/recipe_table.jade":22,"./recipe_row":18,"backbone":6,"backbone.marionette":2}],20:[function(require,module,exports){
+},{"../../../recipes.json":23,"../../templates/recipe_table.jade":22,"./recipe_row":18,"backbone":6,"backbone.marionette":2,"jquery":10,"lodash":11}],20:[function(require,module,exports){
 var jade = require("jade/runtime");
 
 module.exports = function template(locals) {
@@ -30300,8 +30354,31 @@ module.exports = function template(locals) {
 var buf = [];
 var jade_mixins = {};
 var jade_interp;
+;var locals_for_with = (locals || {});(function (allIngredients, undefined) {
+buf.push("<div class=\"row margin-bottom-15\"><select class=\"ingredient-select\"><option value=\"all\">All ingredients</option>");
+// iterate allIngredients
+;(function(){
+  var $$obj = allIngredients;
+  if ('number' == typeof $$obj.length) {
 
-buf.push("<div class=\"table-row header-row\"><div class=\"table-col-5\"></div><div class=\"table-col-20\">Name</div><div class=\"table-col-25\">Type</div><div class=\"table-col-25\">Cook time</div><div class=\"table-col-25\">Ingredients</div></div>");;return buf.join("");
+    for (var $index = 0, $$l = $$obj.length; $index < $$l; $index++) {
+      var val = $$obj[$index];
+
+buf.push("<option" + (jade.attr("value", val, true, false)) + ">" + (jade.escape((jade_interp = val) == null ? '' : jade_interp)) + "</option>");
+    }
+
+  } else {
+    var $$l = 0;
+    for (var $index in $$obj) {
+      $$l++;      var val = $$obj[$index];
+
+buf.push("<option" + (jade.attr("value", val, true, false)) + ">" + (jade.escape((jade_interp = val) == null ? '' : jade_interp)) + "</option>");
+    }
+
+  }
+}).call(this);
+
+buf.push("</select></div><div class=\"table-row header-row\"><div class=\"table-col-5\"></div><div class=\"table-col-20\">Name</div><div class=\"table-col-25\">Type</div><div class=\"table-col-25\">Cook time</div><div class=\"table-col-25\">Ingredients</div></div>");}.call(this,"allIngredients" in locals_for_with?locals_for_with.allIngredients:typeof allIngredients!=="undefined"?allIngredients:undefined,"undefined" in locals_for_with?locals_for_with.undefined:typeof undefined!=="undefined"?undefined:undefined));;return buf.join("");
 };
 },{"jade/runtime":9}],23:[function(require,module,exports){
 module.exports=[

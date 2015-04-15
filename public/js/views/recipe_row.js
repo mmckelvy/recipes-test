@@ -11,6 +11,10 @@ var RecipeRow = Marionette.ItemView.extend({
 		'change .select-item': 'changeRecipe'
 	},
 
+	initialize: function () {
+		this.listenTo(this.model, 'change', this.render(), this);
+	},
+
 	// Trigger a Backbone event; pass along the recipe for the triggering model.
 	changeRecipe: function () {
 		Backbone.trigger('recipe:changed', this.model);

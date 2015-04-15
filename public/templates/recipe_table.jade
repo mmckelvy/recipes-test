@@ -1,3 +1,9 @@
+div.row.margin-bottom-15
+	select.ingredient-select
+		option(value="all") All ingredients
+		each val in allIngredients
+			option(value=val) #{val}
+
 div.table-row.header-row
 	div.table-col-5
 	div.table-col-20 Name

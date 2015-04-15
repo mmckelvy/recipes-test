@@ -23,14 +23,16 @@ var IngredientList = Marionette.ItemView.extend({
 				this.selectedRecipes[recipe.cid] = recipe.get('ingredients');
 			}
 
-			this.setIngredients(this.selectedRecipes);
+			var ingredients = this.getIngredients(this.selectedRecipes);
+			this.model.set({'ingredients': ingredients});
+			
 		});
 
 		this.listenTo(this.model, 'change', this.render, this);
 	},
 
-	// Returns a array of unique ingredients from an array of recipes.
-	setIngredients : function (selectedRecipes) {
+	// Returns an array of unique ingredients from an array of recipes.
+	getIngredients: function (selectedRecipes) {
 		var args = [];
 		for (var key in selectedRecipes) {
 			args.push(selectedRecipes[key])
@@ -40,8 +42,7 @@ var IngredientList = Marionette.ItemView.extend({
 		var allIngredients = [].concat.apply([], args);
 		allIngredients.sort();
 
-		var ingredients =  _.uniq(allIngredients, true); // Remove duplicate ingredients.
-		this.model.set({'ingredients': ingredients});
+		return _.uniq(allIngredients, true); // Remove duplicate ingredients.
 	},
 
 	serializeData: function () {
