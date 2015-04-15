@@ -20,7 +20,7 @@ var RecipeTable = Marionette.CompositeView.extend({
 		this.allIngredients = this.getAllIngredients(allRecipes);
 	},
 
-	// Get all unique ingredients.
+	// Get all unique ingredients for all recipes.
 	getAllIngredients: function (recipes) {
 		var args = recipes.map(function (recipe) {
 			return recipe.ingredients;

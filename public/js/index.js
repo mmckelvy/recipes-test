@@ -1,5 +1,3 @@
-// APP SET UP ---------------------
-
 // Third party libs.
 var $ = require('jquery');
 var Backbone = require('backbone');

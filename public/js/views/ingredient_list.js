@@ -13,8 +13,8 @@ var IngredientList = Marionette.ItemView.extend({
 		this.selectedRecipes = {};
 		
 		this.listenTo(Backbone, 'recipe:changed', function (recipe) {
-			// Check if recipe is already in the this.selectedRecipes array.
-			// Remove if in array, else add it.
+			// Check if recipe is already in the this.selectedRecipes hash.
+			// Remove if in hash, else add it.
 			if (recipe.cid in this.selectedRecipes) {
 				delete this.selectedRecipes[recipe.cid];
 			}
@@ -52,8 +52,6 @@ var IngredientList = Marionette.ItemView.extend({
 		}
 	}
 		
-
-
 });
 
 module.exports = IngredientList;

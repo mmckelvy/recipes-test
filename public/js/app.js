@@ -18,10 +18,6 @@ var IngredientList = require('./views/ingredient_list');
 // Set up and initialize the app.
 var App = new Marionette.Application();
 
-App.on('start', function (options) {
-	Backbone.history.start();
-});
-
 // Add regions to hold relevant views.
 App.addRegions({
 	recipeTableRegion: '#recipe-table-region',

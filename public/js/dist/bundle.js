@@ -30038,10 +30038,6 @@ var IngredientList = require('./views/ingredient_list');
 // Set up and initialize the app.
 var App = new Marionette.Application();
 
-App.on('start', function (options) {
-	Backbone.history.start();
-});
-
 // Add regions to hold relevant views.
 App.addRegions({
 	recipeTableRegion: '#recipe-table-region',
@@ -30065,8 +30061,6 @@ var RecipeCollection = Backbone.Collection.extend({
 
 module.exports = RecipeCollection;
 },{"../models/recipe_model":16,"backbone":6,"backbone.localstorage":1}],14:[function(require,module,exports){
-// APP SET UP ---------------------
-
 // Third party libs.
 var $ = require('jquery');
 var Backbone = require('backbone');
@@ -30147,8 +30141,8 @@ var IngredientList = Marionette.ItemView.extend({
 		this.selectedRecipes = {};
 		
 		this.listenTo(Backbone, 'recipe:changed', function (recipe) {
-			// Check if recipe is already in the this.selectedRecipes array.
-			// Remove if in array, else add it.
+			// Check if recipe is already in the this.selectedRecipes hash.
+			// Remove if in hash, else add it.
 			if (recipe.cid in this.selectedRecipes) {
 				delete this.selectedRecipes[recipe.cid];
 			}
@@ -30186,8 +30180,6 @@ var IngredientList = Marionette.ItemView.extend({
 		}
 	}
 		
-
-
 });
 
 module.exports = IngredientList;
@@ -30249,7 +30241,7 @@ var RecipeTable = Marionette.CompositeView.extend({
 		this.allIngredients = this.getAllIngredients(allRecipes);
 	},
 
-	// Get all unique ingredients.
+	// Get all unique ingredients for all recipes.
 	getAllIngredients: function (recipes) {
 		var args = recipes.map(function (recipe) {
 			return recipe.ingredients;
