@@ -60,6 +60,7 @@ textarea {
   margin-right: auto;
   padding-left: 15px;
   padding-right: 15px;
+  position: relative;
 }
 @media (min-width: 481px) {
   .container {
@@ -111,7 +112,6 @@ textarea {
   padding-right: 5px;
   float: left;
   min-height: 1px;
-  position: relative;
 }
 @media (min-width: 481px) {
   .table-col-100 {
@@ -139,7 +139,6 @@ textarea {
   padding-right: 5px;
   float: left;
   min-height: 1px;
-  position: relative;
 }
 @media (min-width: 481px) {
   .table-col-5 {
@@ -167,7 +166,6 @@ textarea {
   padding-right: 5px;
   float: left;
   min-height: 1px;
-  position: relative;
 }
 @media (min-width: 481px) {
   .table-col-20 {
@@ -195,7 +193,6 @@ textarea {
   padding-right: 5px;
   float: left;
   min-height: 1px;
-  position: relative;
 }
 @media (min-width: 481px) {
   .table-col-25 {
@@ -223,7 +220,6 @@ textarea {
   padding-right: 15px;
   float: left;
   min-height: 1px;
-  position: relative;
 }
 @media (min-width: 481px) {
   .col-100 {
@@ -251,7 +247,6 @@ textarea {
   padding-right: 15px;
   float: left;
   min-height: 1px;
-  position: relative;
 }
 @media (min-width: 481px) {
   .col-100-60 {
@@ -279,7 +274,6 @@ textarea {
   padding-right: 15px;
   float: left;
   min-height: 1px;
-  position: relative;
 }
 @media (min-width: 481px) {
   .col-100-40 {
@@ -304,14 +298,23 @@ textarea {
 .margin-top-50 {
   margin-top: 50px;
 }
+.margin-top-5 {
+  margin-top: 5px;
+}
 .margin-bottom-30 {
   margin-bottom: 30px;
 }
 .margin-bottom-15 {
   margin-bottom: 15px;
 }
+.margin-left-15 {
+  margin-left: 15px;
+}
 .inline-center {
   text-align: center;
+}
+.pos-rel {
+  position: relative;
 }
 .main-header {
   font-size: 30px;
@@ -329,4 +332,28 @@ textarea {
   font-weight: 700;
   padding-bottom: 5px;
   border-bottom: 1px solid #636363;
+}
+.ingredient-select {
+  position: absolute;
+  top: 133px;
+  left: 250px;
+}
+.body-row {
+  height: 100px;
+  border-bottom: 1px solid #d8d8d8;
+}
+.table-cell {
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+.ingredients {
+  margin-left: 5px;
+  margin-top: 5px;
+}
+.ingredients li {
+  margin-bottom: 5px;
 }

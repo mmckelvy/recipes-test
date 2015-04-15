@@ -30100,7 +30100,7 @@ $(function () {
 		recipeTable.filterRecipes(false, localStorage.getItem('ingredient'));
 		App.recipeTableRegion.show(recipeTable);
 		App.ingredientListRegion.show(ingredientList);
-		
+		recipeTable.$el.find('.ingredient-select').val(localStorage.getItem('ingredient'));
 	}
 
 	else {
@@ -30247,7 +30247,6 @@ var RecipeTable = Marionette.CompositeView.extend({
 
 	initialize: function (options) {
 		this.allIngredients = this.getAllIngredients(allRecipes);
-		
 	},
 
 	// Get all unique ingredients.
@@ -30302,14 +30301,14 @@ var buf = [];
 var jade_mixins = {};
 var jade_interp;
 ;var locals_for_with = (locals || {});(function (ingredients, undefined) {
-buf.push("<div class=\"table-row header-row\"><div class=\"table-col-100\">Ingredient name</div></div><div class=\"table-row body-row\">");
+buf.push("<div class=\"table-row header-row\"><div class=\"table-col-100\">Ingredient name</div></div><div class=\"table-row\">");
 if ( typeof ingredients === 'undefined' || ingredients.length === 0)
 {
-buf.push("<span>No recipes selected</span>");
+buf.push("<div class=\"margin-top-5\">No recipes selected</div>");
 }
 else
 {
-buf.push("<ul class=\"ingredient-list\">");
+buf.push("<ul class=\"ingredients\">");
 // iterate ingredients
 ;(function(){
   var $$obj = ingredients;
@@ -30344,7 +30343,7 @@ var buf = [];
 var jade_mixins = {};
 var jade_interp;
 ;var locals_for_with = (locals || {});(function (cookTime, ingredients, name, type) {
-buf.push("<div class=\"table-row body-row\"><div class=\"table-col-5\"><input type=\"checkbox\" class=\"select-item\"/></div><div class=\"table-col-20\">" + (jade.escape((jade_interp = name) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = type) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = cookTime) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = ingredients) == null ? '' : jade_interp)) + "</div></div>");}.call(this,"cookTime" in locals_for_with?locals_for_with.cookTime:typeof cookTime!=="undefined"?cookTime:undefined,"ingredients" in locals_for_with?locals_for_with.ingredients:typeof ingredients!=="undefined"?ingredients:undefined,"name" in locals_for_with?locals_for_with.name:typeof name!=="undefined"?name:undefined,"type" in locals_for_with?locals_for_with.type:typeof type!=="undefined"?type:undefined));;return buf.join("");
+buf.push("<div class=\"table-row body-row\"><div class=\"table-col-5 table-cell\"><input type=\"checkbox\" class=\"select-item\"/></div><div class=\"table-col-20 table-cell\">" + (jade.escape((jade_interp = name) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25 table-cell\">" + (jade.escape((jade_interp = type) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25 table-cell\">" + (jade.escape((jade_interp = cookTime) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25 table-cell\">" + (jade.escape((jade_interp = ingredients) == null ? '' : jade_interp)) + "</div></div>");}.call(this,"cookTime" in locals_for_with?locals_for_with.cookTime:typeof cookTime!=="undefined"?cookTime:undefined,"ingredients" in locals_for_with?locals_for_with.ingredients:typeof ingredients!=="undefined"?ingredients:undefined,"name" in locals_for_with?locals_for_with.name:typeof name!=="undefined"?name:undefined,"type" in locals_for_with?locals_for_with.type:typeof type!=="undefined"?type:undefined));;return buf.join("");
 };
 },{"jade/runtime":9}],22:[function(require,module,exports){
 var jade = require("jade/runtime");
@@ -30354,7 +30353,7 @@ var buf = [];
 var jade_mixins = {};
 var jade_interp;
 ;var locals_for_with = (locals || {});(function (allIngredients, undefined) {
-buf.push("<div class=\"row margin-bottom-15\"><select class=\"ingredient-select\"><option value=\"all\">All ingredients</option>");
+buf.push("<select class=\"ingredient-select\"><option value=\"all\">All ingredients</option>");
 // iterate allIngredients
 ;(function(){
   var $$obj = allIngredients;
@@ -30377,7 +30376,7 @@ buf.push("<option" + (jade.attr("value", val, true, false)) + ">" + (jade.escape
   }
 }).call(this);
 
-buf.push("</select></div><div class=\"table-row header-row\"><div class=\"table-col-5\"></div><div class=\"table-col-20\">Name</div><div class=\"table-col-25\">Type</div><div class=\"table-col-25\">Cook time</div><div class=\"table-col-25\">Ingredients</div></div>");}.call(this,"allIngredients" in locals_for_with?locals_for_with.allIngredients:typeof allIngredients!=="undefined"?allIngredients:undefined,"undefined" in locals_for_with?locals_for_with.undefined:typeof undefined!=="undefined"?undefined:undefined));;return buf.join("");
+buf.push("</select><div class=\"table-row header-row\"><div class=\"table-col-5\"></div><div class=\"table-col-20\">Name</div><div class=\"table-col-25\">Type</div><div class=\"table-col-25\">Cook time</div><div class=\"table-col-25\">Ingredients</div></div>");}.call(this,"allIngredients" in locals_for_with?locals_for_with.allIngredients:typeof allIngredients!=="undefined"?allIngredients:undefined,"undefined" in locals_for_with?locals_for_with.undefined:typeof undefined!=="undefined"?undefined:undefined));;return buf.join("");
 };
 },{"jade/runtime":9}],23:[function(require,module,exports){
 module.exports=[

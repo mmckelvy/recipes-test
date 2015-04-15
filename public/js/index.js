@@ -33,7 +33,7 @@ $(function () {
 		recipeTable.filterRecipes(false, localStorage.getItem('ingredient'));
 		App.recipeTableRegion.show(recipeTable);
 		App.ingredientListRegion.show(ingredientList);
-		
+		recipeTable.$el.find('.ingredient-select').val(localStorage.getItem('ingredient'));
 	}
 
 	else {
