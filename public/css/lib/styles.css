@@ -105,6 +105,34 @@ textarea {
 .table-row:after {
   clear: both;
 }
+.table-col-100 {
+  width: 100%;
+  padding-left: 5px;
+  padding-right: 5px;
+  float: left;
+  min-height: 1px;
+  position: relative;
+}
+@media (min-width: 481px) {
+  .table-col-100 {
+    width: 100%;
+  }
+}
+@media (min-width: 769px) {
+  .table-col-100 {
+    width: 100%;
+  }
+}
+@media (min-width: 1025px) {
+  .table-col-100 {
+    width: 100%;
+  }
+}
+@media (min-width: 1281px) {
+  .table-col-100 {
+    width: 100%;
+  }
+}
 .table-col-25 {
   width: 25%;
   padding-left: 5px;
