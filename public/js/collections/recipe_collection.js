@@ -1,11 +1,9 @@
 var Backbone = require('backbone');
-Backbone.LocalStorage = require('backbone.localstorage');
 var RecipeModel = require('../models/recipe_model');
 
 var RecipeCollection = Backbone.Collection.extend({
 
 	model: RecipeModel,
-	localStorage: new Backbone.LocalStorage('RecipeCollection')
 
 });
 

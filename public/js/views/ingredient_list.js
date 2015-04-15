@@ -28,6 +28,11 @@ var IngredientList = Marionette.ItemView.extend({
 			
 		});
 
+		// Clear the list of ingredients on filter of recipes.
+		this.listenTo(Backbone, 'recipes:cleared', function () {
+			this.model.unset('ingredients');
+		});
+
 		this.listenTo(this.model, 'change', this.render, this);
 	},
 

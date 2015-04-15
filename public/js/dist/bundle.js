@@ -1,264 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-/**
- * Backbone localStorage Adapter
- * Version 1.1.16
- *
- * https://github.com/jeromegn/Backbone.localStorage
- */
-(function (root, factory) {
-  if (typeof exports === 'object' && typeof require === 'function') {
-    module.exports = factory(require("backbone"));
-  } else if (typeof define === "function" && define.amd) {
-    // AMD. Register as an anonymous module.
-    define(["backbone"], function(Backbone) {
-      // Use global variables if the locals are undefined.
-      return factory(Backbone || root.Backbone);
-    });
-  } else {
-    factory(Backbone);
-  }
-}(this, function(Backbone) {
-// A simple module to replace `Backbone.sync` with *localStorage*-based
-// persistence. Models are given GUIDS, and saved into a JSON object. Simple
-// as that.
-
-// Generate four random hex digits.
-function S4() {
-   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-};
-
-// Generate a pseudo-GUID by concatenating random hexadecimal.
-function guid() {
-   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
-};
-
-function isObject(item) {
-  return item === Object(item);
-}
-
-function contains(array, item) {
-  var i = array.length;
-  while (i--) if (array[i] === item) return true;
-  return false;
-}
-
-function extend(obj, props) {
-  for (var key in props) obj[key] = props[key]
-  return obj;
-}
-
-function result(object, property) {
-    if (object == null) return void 0;
-    var value = object[property];
-    return (typeof value === 'function') ? object[property]() : value;
-}
-
-// Our Store is represented by a single JS object in *localStorage*. Create it
-// with a meaningful name, like the name you'd give a table.
-// window.Store is deprectated, use Backbone.LocalStorage instead
-Backbone.LocalStorage = window.Store = function(name, serializer) {
-  if( !this.localStorage ) {
-    throw "Backbone.localStorage: Environment does not support localStorage."
-  }
-  this.name = name;
-  this.serializer = serializer || {
-    serialize: function(item) {
-      return isObject(item) ? JSON.stringify(item) : item;
-    },
-    // fix for "illegal access" error on Android when JSON.parse is passed null
-    deserialize: function (data) {
-      return data && JSON.parse(data);
-    }
-  };
-  var store = this.localStorage().getItem(this.name);
-  this.records = (store && store.split(",")) || [];
-};
-
-extend(Backbone.LocalStorage.prototype, {
-
-  // Save the current state of the **Store** to *localStorage*.
-  save: function() {
-    this.localStorage().setItem(this.name, this.records.join(","));
-  },
-
-  // Add a model, giving it a (hopefully)-unique GUID, if it doesn't already
-  // have an id of it's own.
-  create: function(model) {
-    if (!model.id && model.id !== 0) {
-      model.id = guid();
-      model.set(model.idAttribute, model.id);
-    }
-    this.localStorage().setItem(this._itemName(model.id), this.serializer.serialize(model));
-    this.records.push(model.id.toString());
-    this.save();
-    return this.find(model);
-  },
-
-  // Update a model by replacing its copy in `this.data`.
-  update: function(model) {
-    this.localStorage().setItem(this._itemName(model.id), this.serializer.serialize(model));
-    var modelId = model.id.toString();
-    if (!contains(this.records, modelId)) {
-      this.records.push(modelId);
-      this.save();
-    }
-    return this.find(model);
-  },
-
-  // Retrieve a model from `this.data` by id.
-  find: function(model) {
-    return this.serializer.deserialize(this.localStorage().getItem(this._itemName(model.id)));
-  },
-
-  // Return the array of all models currently in storage.
-  findAll: function() {
-    var result = [];
-    for (var i = 0, id, data; i < this.records.length; i++) {
-      id = this.records[i];
-      data = this.serializer.deserialize(this.localStorage().getItem(this._itemName(id)));
-      if (data != null) result.push(data);
-    }
-    return result;
-  },
-
-  // Delete a model from `this.data`, returning it.
-  destroy: function(model) {
-    this.localStorage().removeItem(this._itemName(model.id));
-    var modelId = model.id.toString();
-    for (var i = 0, id; i < this.records.length; i++) {
-      if (this.records[i] === modelId) {
-        this.records.splice(i, 1);
-      }
-    }
-    this.save();
-    return model;
-  },
-
-  localStorage: function() {
-    return localStorage;
-  },
-
-  // Clear localStorage for specific collection.
-  _clear: function() {
-    var local = this.localStorage(),
-      itemRe = new RegExp("^" + this.name + "-");
-
-    // Remove id-tracking item (e.g., "foo").
-    local.removeItem(this.name);
-
-    // Match all data items (e.g., "foo-ID") and remove.
-    for (var k in local) {
-      if (itemRe.test(k)) {
-        local.removeItem(k);
-      }
-    }
-
-    this.records.length = 0;
-  },
-
-  // Size of localStorage.
-  _storageSize: function() {
-    return this.localStorage().length;
-  },
-
-  _itemName: function(id) {
-    return this.name+"-"+id;
-  }
-
-});
-
-// localSync delegate to the model or collection's
-// *localStorage* property, which should be an instance of `Store`.
-// window.Store.sync and Backbone.localSync is deprecated, use Backbone.LocalStorage.sync instead
-Backbone.LocalStorage.sync = window.Store.sync = Backbone.localSync = function(method, model, options) {
-  var store = result(model, 'localStorage') || result(model.collection, 'localStorage');
-
-  var resp, errorMessage;
-  //If $ is having Deferred - use it.
-  var syncDfd = Backbone.$ ?
-    (Backbone.$.Deferred && Backbone.$.Deferred()) :
-    (Backbone.Deferred && Backbone.Deferred());
-
-  try {
-
-    switch (method) {
-      case "read":
-        resp = model.id != undefined ? store.find(model) : store.findAll();
-        break;
-      case "create":
-        resp = store.create(model);
-        break;
-      case "update":
-        resp = store.update(model);
-        break;
-      case "delete":
-        resp = store.destroy(model);
-        break;
-    }
-
-  } catch(error) {
-    if (error.code === 22 && store._storageSize() === 0)
-      errorMessage = "Private browsing is unsupported";
-    else
-      errorMessage = error.message;
-  }
-
-  if (resp) {
-    if (options && options.success) {
-      if (Backbone.VERSION === "0.9.10") {
-        options.success(model, resp, options);
-      } else {
-        options.success(resp);
-      }
-    }
-    if (syncDfd) {
-      syncDfd.resolve(resp);
-    }
-
-  } else {
-    errorMessage = errorMessage ? errorMessage
-                                : "Record Not Found";
-
-    if (options && options.error)
-      if (Backbone.VERSION === "0.9.10") {
-        options.error(model, errorMessage, options);
-      } else {
-        options.error(errorMessage);
-      }
-
-    if (syncDfd)
-      syncDfd.reject(errorMessage);
-  }
-
-  // add compatibility with $.ajax
-  // always execute callback for success and error
-  if (options && options.complete) options.complete(resp);
-
-  return syncDfd && syncDfd.promise();
-};
-
-Backbone.ajaxSync = Backbone.sync;
-
-Backbone.getSyncMethod = function(model, options) {
-  var forceAjaxSync = options && options.ajaxSync;
-
-  if(!forceAjaxSync && (result(model, 'localStorage') || result(model.collection, 'localStorage'))) {
-    return Backbone.localSync;
-  }
-
-  return Backbone.ajaxSync;
-};
-
-// Override 'Backbone.sync' to default to localSync,
-// the original 'Backbone.sync' is still available in 'Backbone.ajaxSync'
-Backbone.sync = function(method, model, options) {
-  return Backbone.getSyncMethod(model, options).apply(this, [method, model, options]);
-};
-
-return Backbone.LocalStorage;
-}));
-
-},{"backbone":6}],2:[function(require,module,exports){
 // MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v2.4.1
@@ -3621,7 +3361,7 @@ return Backbone.LocalStorage;
   return Marionette;
 }));
 
-},{"backbone":6,"backbone.babysitter":3,"backbone.wreqr":4,"underscore":5}],3:[function(require,module,exports){
+},{"backbone":5,"backbone.babysitter":2,"backbone.wreqr":3,"underscore":4}],2:[function(require,module,exports){
 // Backbone.BabySitter
 // -------------------
 // v0.1.6
@@ -3813,7 +3553,7 @@ return Backbone.LocalStorage;
 
 }));
 
-},{"backbone":6,"underscore":5}],4:[function(require,module,exports){
+},{"backbone":5,"underscore":4}],3:[function(require,module,exports){
 // Backbone.Wreqr (Backbone.Marionette)
 // ----------------------------------
 // v1.3.1
@@ -4255,7 +3995,7 @@ return Backbone.LocalStorage;
 
 }));
 
-},{"backbone":6,"underscore":5}],5:[function(require,module,exports){
+},{"backbone":5,"underscore":4}],4:[function(require,module,exports){
 //     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -5600,7 +5340,7 @@ return Backbone.LocalStorage;
   }
 }).call(this);
 
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 //     Backbone.js 1.1.2
 
 //     (c) 2010-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -7210,7 +6950,7 @@ return Backbone.LocalStorage;
 
 }));
 
-},{"underscore":7}],7:[function(require,module,exports){
+},{"underscore":6}],6:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -8760,9 +8500,9 @@ return Backbone.LocalStorage;
   }
 }.call(this));
 
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 (function (global){
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.jade=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
@@ -9003,7 +8743,7 @@ exports.rethrow = function rethrow(err, filename, lineno, str){
 },{}]},{},[1])(1)
 });
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"fs":8}],10:[function(require,module,exports){
+},{"fs":7}],9:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.3
  * http://jquery.com/
@@ -18210,7 +17950,7 @@ return jQuery;
 
 }));
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -30017,7 +29757,7 @@ return jQuery;
 }.call(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 // APP SET UP ---------------------
 
 // Third party libs.
@@ -30047,20 +29787,18 @@ App.addRegions({
 module.exports = App;
 
 
-},{"../../recipes.json":23,"./collections/recipe_collection":13,"./models/ingredient_model":15,"./views/ingredient_list":17,"./views/recipe_table":19,"backbone":6,"backbone.marionette":2,"jquery":10}],13:[function(require,module,exports){
+},{"../../recipes.json":22,"./collections/recipe_collection":12,"./models/ingredient_model":14,"./views/ingredient_list":16,"./views/recipe_table":18,"backbone":5,"backbone.marionette":1,"jquery":9}],12:[function(require,module,exports){
 var Backbone = require('backbone');
-Backbone.LocalStorage = require('backbone.localstorage');
 var RecipeModel = require('../models/recipe_model');
 
 var RecipeCollection = Backbone.Collection.extend({
 
 	model: RecipeModel,
-	localStorage: new Backbone.LocalStorage('RecipeCollection')
 
 });
 
 module.exports = RecipeCollection;
-},{"../models/recipe_model":16,"backbone":6,"backbone.localstorage":1}],14:[function(require,module,exports){
+},{"../models/recipe_model":15,"backbone":5}],13:[function(require,module,exports){
 // Third party libs.
 var $ = require('jquery');
 var Backbone = require('backbone');
@@ -30108,7 +29846,7 @@ $(function () {
 
 
 
-},{"../../recipes.json":23,"./app":12,"./collections/recipe_collection":13,"./models/ingredient_model":15,"./views/ingredient_list":17,"./views/recipe_table":19,"backbone":6,"backbone.marionette":2,"jquery":10}],15:[function(require,module,exports){
+},{"../../recipes.json":22,"./app":11,"./collections/recipe_collection":12,"./models/ingredient_model":14,"./views/ingredient_list":16,"./views/recipe_table":18,"backbone":5,"backbone.marionette":1,"jquery":9}],14:[function(require,module,exports){
 var Backbone = require('backbone');
 
 
@@ -30117,7 +29855,7 @@ var IngredientModel = Backbone.Model.extend({
 });
 
 module.exports = IngredientModel;
-},{"backbone":6}],16:[function(require,module,exports){
+},{"backbone":5}],15:[function(require,module,exports){
 var Backbone = require('backbone');
 
 var RecipeModel = Backbone.Model.extend({
@@ -30125,7 +29863,7 @@ var RecipeModel = Backbone.Model.extend({
 });
 
 module.exports = RecipeModel;
-},{"backbone":6}],17:[function(require,module,exports){
+},{"backbone":5}],16:[function(require,module,exports){
 var Backbone = require('backbone');
 var Marionette = require('backbone.marionette');
 var _ = require('lodash');
@@ -30156,6 +29894,13 @@ var IngredientList = Marionette.ItemView.extend({
 			
 		});
 
+		// Clear the list of ingredients on filter of recipes.
+		this.listenTo(Backbone, 'recipes:cleared', function () {
+			console.log('fired');
+			this.model.unset('ingredients');
+			console.log(this.model);
+		});
+
 		this.listenTo(this.model, 'change', this.render, this);
 	},
 
@@ -30183,7 +29928,7 @@ var IngredientList = Marionette.ItemView.extend({
 });
 
 module.exports = IngredientList;
-},{"../../templates/ingredient_list.jade":20,"../models/ingredient_model":15,"backbone":6,"backbone.marionette":2,"lodash":11}],18:[function(require,module,exports){
+},{"../../templates/ingredient_list.jade":19,"../models/ingredient_model":14,"backbone":5,"backbone.marionette":1,"lodash":10}],17:[function(require,module,exports){
 var Backbone = require('backbone');
 var Marionette = require('backbone.marionette');
 var recipeRowTemplate = require('../../templates/recipe_row.jade');
@@ -30218,7 +29963,7 @@ var RecipeRow = Marionette.ItemView.extend({
 });
 
 module.exports = RecipeRow;
-},{"../../templates/recipe_row.jade":21,"backbone":6,"backbone.marionette":2}],19:[function(require,module,exports){
+},{"../../templates/recipe_row.jade":20,"backbone":5,"backbone.marionette":1}],18:[function(require,module,exports){
 var $ = require('jquery');
 var Backbone = require('backbone');
 var Marionette = require('backbone.marionette');
@@ -30270,6 +30015,8 @@ var RecipeTable = Marionette.CompositeView.extend({
 		}
 
 		this.collection.set(filtered);
+		// Trigger an event to clear the ingredient list.
+		Backbone.trigger('recipes:cleared');
 		// Update localstorage with selection.
 		localStorage.setItem('ingredient', selectedIngredient);
 
@@ -30285,7 +30032,7 @@ var RecipeTable = Marionette.CompositeView.extend({
 
 module.exports = RecipeTable;
 
-},{"../../../recipes.json":23,"../../templates/recipe_table.jade":22,"./recipe_row":18,"backbone":6,"backbone.marionette":2,"jquery":10,"lodash":11}],20:[function(require,module,exports){
+},{"../../../recipes.json":22,"../../templates/recipe_table.jade":21,"./recipe_row":17,"backbone":5,"backbone.marionette":1,"jquery":9,"lodash":10}],19:[function(require,module,exports){
 var jade = require("jade/runtime");
 
 module.exports = function template(locals) {
@@ -30327,7 +30074,7 @@ buf.push("</ul>");
 }
 buf.push("</div>");}.call(this,"ingredients" in locals_for_with?locals_for_with.ingredients:typeof ingredients!=="undefined"?ingredients:undefined,"undefined" in locals_for_with?locals_for_with.undefined:typeof undefined!=="undefined"?undefined:undefined));;return buf.join("");
 };
-},{"jade/runtime":9}],21:[function(require,module,exports){
+},{"jade/runtime":8}],20:[function(require,module,exports){
 var jade = require("jade/runtime");
 
 module.exports = function template(locals) {
@@ -30337,7 +30084,7 @@ var jade_interp;
 ;var locals_for_with = (locals || {});(function (cookTime, ingredients, name, type) {
 buf.push("<div class=\"table-row body-row\"><div class=\"table-col-5 table-cell\"><input type=\"checkbox\" class=\"select-item\"/></div><div class=\"table-col-20 table-cell\">" + (jade.escape((jade_interp = name) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25 table-cell\">" + (jade.escape((jade_interp = type) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25 table-cell\">" + (jade.escape((jade_interp = cookTime) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25 table-cell\">" + (jade.escape((jade_interp = ingredients) == null ? '' : jade_interp)) + "</div></div>");}.call(this,"cookTime" in locals_for_with?locals_for_with.cookTime:typeof cookTime!=="undefined"?cookTime:undefined,"ingredients" in locals_for_with?locals_for_with.ingredients:typeof ingredients!=="undefined"?ingredients:undefined,"name" in locals_for_with?locals_for_with.name:typeof name!=="undefined"?name:undefined,"type" in locals_for_with?locals_for_with.type:typeof type!=="undefined"?type:undefined));;return buf.join("");
 };
-},{"jade/runtime":9}],22:[function(require,module,exports){
+},{"jade/runtime":8}],21:[function(require,module,exports){
 var jade = require("jade/runtime");
 
 module.exports = function template(locals) {
@@ -30370,7 +30117,7 @@ buf.push("<option" + (jade.attr("value", val, true, false)) + ">" + (jade.escape
 
 buf.push("</select><div class=\"table-row header-row\"><div class=\"table-col-5\"></div><div class=\"table-col-20\">Name</div><div class=\"table-col-25\">Type</div><div class=\"table-col-25\">Cook time</div><div class=\"table-col-25\">Ingredients</div></div>");}.call(this,"allIngredients" in locals_for_with?locals_for_with.allIngredients:typeof allIngredients!=="undefined"?allIngredients:undefined,"undefined" in locals_for_with?locals_for_with.undefined:typeof undefined!=="undefined"?undefined:undefined));;return buf.join("");
 };
-},{"jade/runtime":9}],23:[function(require,module,exports){
+},{"jade/runtime":8}],22:[function(require,module,exports){
 module.exports=[
     {
         "name": "Risotto",
@@ -30421,4 +30168,4 @@ module.exports=[
         "ingredients": ["Onion", "Oil", "Rice", "Egg", "Soy Sauce", "Sesame Oil", "Chicken", "Carrot", "Peas"]
     }
 ]
-},{}]},{},[14]);
+},{}]},{},[13]);

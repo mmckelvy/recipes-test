@@ -49,6 +49,8 @@ var RecipeTable = Marionette.CompositeView.extend({
 		}
 
 		this.collection.set(filtered);
+		// Trigger an event to clear the ingredient list.
+		Backbone.trigger('recipes:cleared');
 		// Update localstorage with selection.
 		localStorage.setItem('ingredient', selectedIngredient);
 
