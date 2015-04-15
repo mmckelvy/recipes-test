@@ -6,7 +6,16 @@ var RecipeRow = Marionette.ItemView.extend({
 
 	className: 'recipe-row',
 	template: recipeRowTemplate,
-	
+
+	events: {
+		'change .select-item': 'changeRecipe'
+	},
+
+	// Trigger a Backbone event; pass along the recipe for the triggering model.
+	changeRecipe: function () {
+		Backbone.trigger('recipe:changed', this.model);
+	},
+
 	serializeData: function () {
 		return {
 			name: this.model.get('name'),

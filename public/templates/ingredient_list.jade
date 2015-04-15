@@ -2,9 +2,14 @@ div.table-row.header-row
 	div.table-col-100 Ingredient name
 
 div.table-row.body-row
-	ul.ingredient-list
-		each val in ingredients
-			li #{val}
+
+	if typeof ingredients === 'undefined' || ingredients.length === 0
+		span No recipes selected
+	
+	else
+		ul.ingredient-list
+			each val in ingredients
+				li #{val}
 
 
 

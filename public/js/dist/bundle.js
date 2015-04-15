@@ -30018,20 +30018,7 @@ return jQuery;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],12:[function(require,module,exports){
-var Backbone = require('backbone');
-Backbone.LocalStorage = require('backbone.localstorage');
-var RecipeModel = require('../models/recipe_model');
-
-var RecipeCollection = Backbone.Collection.extend({
-
-	model: RecipeModel,
-	localStorage: new Backbone.LocalStorage('RecipeCollection')
-
-});
-
-module.exports = RecipeCollection;
-},{"../models/recipe_model":15,"backbone":6,"backbone.localstorage":1}],13:[function(require,module,exports){
-// APP SET UP AND BROWSERIFY ENTRY FILE ---------------------
+// APP SET UP ---------------------
 
 // Third party libs.
 var $ = require('jquery');
@@ -30061,33 +30048,65 @@ App.addRegions({
 	ingredientListRegion: '#ingredient-list-region'
 });
 
+module.exports = App;
+
+
+},{"../../recipes.json":23,"./collections/recipe_collection":13,"./models/ingredient_model":15,"./views/ingredient_list":17,"./views/recipe_table":19,"backbone":6,"backbone.marionette":2,"jquery":10}],13:[function(require,module,exports){
+var Backbone = require('backbone');
+Backbone.LocalStorage = require('backbone.localstorage');
+var RecipeModel = require('../models/recipe_model');
+
+var RecipeCollection = Backbone.Collection.extend({
+
+	model: RecipeModel,
+	localStorage: new Backbone.LocalStorage('RecipeCollection')
+
+});
+
+module.exports = RecipeCollection;
+},{"../models/recipe_model":16,"backbone":6,"backbone.localstorage":1}],14:[function(require,module,exports){
+// APP SET UP ---------------------
+
+// Third party libs.
+var $ = require('jquery');
+var Backbone = require('backbone');
+Backbone.$ = $;
+var Marionette = require('backbone.marionette');
+var App = require('./app')
+
+// Collections and data.
+var RecipeCollection = require('./collections/recipe_collection');
+var IngredientModel = require('./models/ingredient_model');
+var allRecipes = require('../../recipes.json');
+
+// Views
+var RecipeTable = require('./views/recipe_table');
+var IngredientList = require('./views/ingredient_list');
+
 $(function () {
 	// Start the application.
 	App.start();
 
 	// Initialize collections.
-	App.selectedRecipes = new RecipeCollection();
+	App.recipes = new RecipeCollection();
 	App.uniqIngredients = new IngredientModel();
 
 	// Initialize the views.
-	var recipeTable = new RecipeTable({collection: App.selectedRecipes});
+	var recipeTable = new RecipeTable({collection: App.recipes});
 	var ingredientList = new IngredientList({model: App.uniqIngredients});
 
 	// Retrieve data.
 	// If there is nothing in local storage, then bootstrap the data.
-	App.selectedRecipes.fetch({
+	App.recipes.fetch({
 		success: function (storedRecipes, response, options) {
 			// If nothing in local storage, then use the bootstrapped data.
 			if (storedRecipes.length === 0) {
-				App.selectedRecipes.set(allRecipes);
+				App.recipes.set(allRecipes);
 			}
 
 			else {
 				App.selectedRecipes.set(storedRecipes);
 			}
-
-			// Set ingredients based on recipes.
-			App.uniqIngredients.setIngredients(App.selectedRecipes.toJSON(), 'ingredients');
 
 			App.recipeTableRegion.show(recipeTable);
 			App.ingredientListRegion.show(ingredientList);
@@ -30099,30 +30118,16 @@ $(function () {
 
 
 
-},{"../../recipes.json":22,"./collections/recipe_collection":12,"./models/ingredient_model":14,"./views/ingredient_list":16,"./views/recipe_table":18,"backbone":6,"backbone.marionette":2,"jquery":10}],14:[function(require,module,exports){
+},{"../../recipes.json":23,"./app":12,"./collections/recipe_collection":13,"./models/ingredient_model":15,"./views/ingredient_list":17,"./views/recipe_table":19,"backbone":6,"backbone.marionette":2,"jquery":10}],15:[function(require,module,exports){
 var Backbone = require('backbone');
-var _ = require('lodash');
+
 
 var IngredientModel = Backbone.Model.extend({
-
-// Returns a array of unique ingredients from an array of recipes.
-	setIngredients : function (recipes, prop) {
-		var args = recipes.map(function (recipe) {
-			return recipe[prop];
-		})
-		
-		// Concatenate the arrays.
-		var allIngredients = [].concat.apply([], args);
-		allIngredients.sort();
-
-		var ingredients =  _.uniq(allIngredients, true); // Remove duplicate ingredients.
-		this.set({'ingredients': ingredients});
-	}
 
 });
 
 module.exports = IngredientModel;
-},{"backbone":6,"lodash":11}],15:[function(require,module,exports){
+},{"backbone":6}],16:[function(require,module,exports){
 var Backbone = require('backbone');
 
 var RecipeModel = Backbone.Model.extend({
@@ -30130,19 +30135,55 @@ var RecipeModel = Backbone.Model.extend({
 });
 
 module.exports = RecipeModel;
-},{"backbone":6}],16:[function(require,module,exports){
+},{"backbone":6}],17:[function(require,module,exports){
 var Backbone = require('backbone');
 var Marionette = require('backbone.marionette');
+var _ = require('lodash');
+var IngredientModel = require('../models/ingredient_model');
 var ingredientListTemplate = require('../../templates/ingredient_list.jade');
-
 
 var IngredientList = Marionette.ItemView.extend({
 
 	className: 'ingredient-list',
 	template: ingredientListTemplate,
 
-	serializeData: function () {
+	initialize: function (options) {
+		this.selectedRecipes = {};
 		
+		this.listenTo(Backbone, 'recipe:changed', function (recipe) {
+			// Check if recipe is already in the this.selectedRecipes array.
+			// Remove if in array, else add it.
+			if (recipe.cid in this.selectedRecipes) {
+				delete this.selectedRecipes[recipe.cid];
+			}
+			
+			else {
+				this.selectedRecipes[recipe.cid] = recipe.get('ingredients');
+			}
+
+			this.setIngredients(this.selectedRecipes);
+		});
+
+		this.listenTo(this.model, 'change', this.render, this);
+	},
+
+	// Returns a array of unique ingredients from an array of recipes.
+	setIngredients : function (selectedRecipes) {
+		var args = [];
+		for (var key in selectedRecipes) {
+			args.push(selectedRecipes[key])
+		}
+		
+		// Concatenate the arrays.
+		var allIngredients = [].concat.apply([], args);
+		allIngredients.sort();
+
+		var ingredients =  _.uniq(allIngredients, true); // Remove duplicate ingredients.
+		this.model.set({'ingredients': ingredients});
+	},
+
+	serializeData: function () {
+
 		return {
 			ingredients: this.model.get('ingredients')
 		}
@@ -30153,7 +30194,7 @@ var IngredientList = Marionette.ItemView.extend({
 });
 
 module.exports = IngredientList;
-},{"../../templates/ingredient_list.jade":19,"backbone":6,"backbone.marionette":2}],17:[function(require,module,exports){
+},{"../../templates/ingredient_list.jade":20,"../models/ingredient_model":15,"backbone":6,"backbone.marionette":2,"lodash":11}],18:[function(require,module,exports){
 var Backbone = require('backbone');
 var Marionette = require('backbone.marionette');
 var recipeRowTemplate = require('../../templates/recipe_row.jade');
@@ -30162,7 +30203,16 @@ var RecipeRow = Marionette.ItemView.extend({
 
 	className: 'recipe-row',
 	template: recipeRowTemplate,
-	
+
+	events: {
+		'change .select-item': 'changeRecipe'
+	},
+
+	// Trigger a Backbone event; pass along the recipe for the triggering model.
+	changeRecipe: function () {
+		Backbone.trigger('recipe:changed', this.model);
+	},
+
 	serializeData: function () {
 		return {
 			name: this.model.get('name'),
@@ -30175,7 +30225,7 @@ var RecipeRow = Marionette.ItemView.extend({
 });
 
 module.exports = RecipeRow;
-},{"../../templates/recipe_row.jade":20,"backbone":6,"backbone.marionette":2}],18:[function(require,module,exports){
+},{"../../templates/recipe_row.jade":21,"backbone":6,"backbone.marionette":2}],19:[function(require,module,exports){
 var Backbone = require('backbone');
 var Marionette = require('backbone.marionette');
 var RecipeRow = require('./recipe_row');
@@ -30191,7 +30241,7 @@ var RecipeTable = Marionette.CompositeView.extend({
 
 module.exports = RecipeTable;
 
-},{"../../templates/recipe_table.jade":21,"./recipe_row":17,"backbone":6,"backbone.marionette":2}],19:[function(require,module,exports){
+},{"../../templates/recipe_table.jade":22,"./recipe_row":18,"backbone":6,"backbone.marionette":2}],20:[function(require,module,exports){
 var jade = require("jade/runtime");
 
 module.exports = function template(locals) {
@@ -30199,7 +30249,14 @@ var buf = [];
 var jade_mixins = {};
 var jade_interp;
 ;var locals_for_with = (locals || {});(function (ingredients, undefined) {
-buf.push("<div class=\"table-row header-row\"><div class=\"table-col-100\">Ingredient name</div></div><div class=\"table-row body-row\"><ul class=\"ingredient-list\">");
+buf.push("<div class=\"table-row header-row\"><div class=\"table-col-100\">Ingredient name</div></div><div class=\"table-row body-row\">");
+if ( typeof ingredients === 'undefined' || ingredients.length === 0)
+{
+buf.push("<span>No recipes selected</span>");
+}
+else
+{
+buf.push("<ul class=\"ingredient-list\">");
 // iterate ingredients
 ;(function(){
   var $$obj = ingredients;
@@ -30222,17 +30279,9 @@ buf.push("<li>" + (jade.escape((jade_interp = val) == null ? '' : jade_interp)) 
   }
 }).call(this);
 
-buf.push("</ul></div>");}.call(this,"ingredients" in locals_for_with?locals_for_with.ingredients:typeof ingredients!=="undefined"?ingredients:undefined,"undefined" in locals_for_with?locals_for_with.undefined:typeof undefined!=="undefined"?undefined:undefined));;return buf.join("");
-};
-},{"jade/runtime":9}],20:[function(require,module,exports){
-var jade = require("jade/runtime");
-
-module.exports = function template(locals) {
-var buf = [];
-var jade_mixins = {};
-var jade_interp;
-;var locals_for_with = (locals || {});(function (cookTime, ingredients, name, type) {
-buf.push("<div class=\"table-row body-row\"><div class=\"table-col-25\">" + (jade.escape((jade_interp = name) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = type) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = cookTime) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = ingredients) == null ? '' : jade_interp)) + "</div></div>");}.call(this,"cookTime" in locals_for_with?locals_for_with.cookTime:typeof cookTime!=="undefined"?cookTime:undefined,"ingredients" in locals_for_with?locals_for_with.ingredients:typeof ingredients!=="undefined"?ingredients:undefined,"name" in locals_for_with?locals_for_with.name:typeof name!=="undefined"?name:undefined,"type" in locals_for_with?locals_for_with.type:typeof type!=="undefined"?type:undefined));;return buf.join("");
+buf.push("</ul>");
+}
+buf.push("</div>");}.call(this,"ingredients" in locals_for_with?locals_for_with.ingredients:typeof ingredients!=="undefined"?ingredients:undefined,"undefined" in locals_for_with?locals_for_with.undefined:typeof undefined!=="undefined"?undefined:undefined));;return buf.join("");
 };
 },{"jade/runtime":9}],21:[function(require,module,exports){
 var jade = require("jade/runtime");
@@ -30241,10 +30290,20 @@ module.exports = function template(locals) {
 var buf = [];
 var jade_mixins = {};
 var jade_interp;
-
-buf.push("<div class=\"table-row header-row\"><div class=\"table-col-25\">Name</div><div class=\"table-col-25\">Type</div><div class=\"table-col-25\">Cook time</div><div class=\"table-col-25\">Ingredients</div></div>");;return buf.join("");
+;var locals_for_with = (locals || {});(function (cookTime, ingredients, name, type) {
+buf.push("<div class=\"table-row body-row\"><div class=\"table-col-5\"><input type=\"checkbox\" class=\"select-item\"/></div><div class=\"table-col-20\">" + (jade.escape((jade_interp = name) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = type) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = cookTime) == null ? '' : jade_interp)) + "</div><div class=\"table-col-25\">" + (jade.escape((jade_interp = ingredients) == null ? '' : jade_interp)) + "</div></div>");}.call(this,"cookTime" in locals_for_with?locals_for_with.cookTime:typeof cookTime!=="undefined"?cookTime:undefined,"ingredients" in locals_for_with?locals_for_with.ingredients:typeof ingredients!=="undefined"?ingredients:undefined,"name" in locals_for_with?locals_for_with.name:typeof name!=="undefined"?name:undefined,"type" in locals_for_with?locals_for_with.type:typeof type!=="undefined"?type:undefined));;return buf.join("");
 };
 },{"jade/runtime":9}],22:[function(require,module,exports){
+var jade = require("jade/runtime");
+
+module.exports = function template(locals) {
+var buf = [];
+var jade_mixins = {};
+var jade_interp;
+
+buf.push("<div class=\"table-row header-row\"><div class=\"table-col-5\"></div><div class=\"table-col-20\">Name</div><div class=\"table-col-25\">Type</div><div class=\"table-col-25\">Cook time</div><div class=\"table-col-25\">Ingredients</div></div>");;return buf.join("");
+};
+},{"jade/runtime":9}],23:[function(require,module,exports){
 module.exports=[
     {
         "name": "Risotto",
@@ -30295,4 +30354,4 @@ module.exports=[
         "ingredients": ["Onion", "Oil", "Rice", "Egg", "Soy Sauce", "Sesame Oil", "Chicken", "Carrot", "Peas"]
     }
 ]
-},{}]},{},[13]);
+},{}]},{},[14]);
